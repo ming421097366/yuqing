@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>热点演化</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=9ff6de693c199a14e77ff93e1907c5fc"></script>
+        <script src="../JS/jquery.js"></script>
+        <script src="../JS/ReviewsSeaJS.js"></script>
+        <script src="../JS/jquery.danmu.min.js"></script>
+        <style>
+            html,body {
+                width: 100%;
+                height: 100%;                
+                overflow: hidden;
+                margin: 0px;
+                padding: 0px;
+                font-family: Helvetica, Tahoma, Arial, STXihei, "华文细黑", "Microsoft YaHei", "微软雅黑", sans-serif;
+            }
+            select{
+                  width: 80px;
+            }
+            #map {
+                width: 100%;
+                height: 100%;                
+            }
+            .control-panel {
+                position: fixed;
+                right: 0px;
+                top: 80px;
+                width: 100px;
+                height: 120px;
+                cursor: pointer;
+            }
+            .control {
+                box-shadow: 1.5px 2.598px 7px 0px rgba(7,0,2,0.063);
+                width: 100px;
+                height: 60px;
+                background-color: #226fbe;
+                color: white;
+                line-height: 60px;
+                text-align: center;
+                font-size: 13px;
+            }
+            .control:hover{
+                background-color: rgb(82, 141, 201);
+            }
+
+
+            #mask {
+                position: fixed;
+                top: 0px;
+                left: 0px;
+                right: 0px;
+                bottom: 0px;
+                background-color: rgba(0,0,0,0.6);
+                z-index: 1000;
+                display: none;
+            }
+            #danmu {
+
+            }
+            .m-chart{
+                position: fixed;
+                top:0px;
+                left: 0px;
+                bottom: 0px;
+                right: 0px;                                                
+            }
+
+            .m-chart .close-item {
+                position: absolute;
+                top: 0px;
+                right: 5px;
+                cursor: pointer;
+                z-index: 10000;
+            }
+
+        </style>
+        <script>
+            function getAllReviews(id) {
+                var data = null;
+                var postData =
+                        {
+                            newsID: id,
+                            type: "REVIEWS_GET_ALL_XY"
+                        };
+                postData = JSON.stringify(postData);
+                function errorHandle(xhr, message)
+                {
+                    alert(message + "cannot find php");
+                }
+                function successHandle(echoData)
+                {
+                    var obj = JSON.parse(echoData);
+                    if (obj.success)
+                    {
+                        data = obj.data;
+                    }
+                    else
+                    {
+                        alert(obj.message + "fail to get the reviews");
+                    }
+                }
+                var ajaxParameter =
+                        {
+                            url: "../PHP/MainServer.php",
+                            type: "POST",
+                            data: {parameters: postData},
+                            error: errorHandle,
+                            success: successHandle,
+                            async: false//同步
+                        };
+                $.ajax(ajaxParameter);
+                return data;
+            }
+            function addMaskShowDialog() {
+                $("#mask").show();
+                var $html = $('<div class = "m-chart">' +
+                        '<div class = "close-item"> X </div>' +
+                        '<div id = "danmu"> </div>' +
+                        '</div>');
+                $("#mask").html($html);
+                $(".close-item").click(function () {
+                    $("#mask").html("");
+                    $("#mask").hide();
+                });
+            }
+            $(function () {
+                $("#beignDanmu").click(function () {
+                    addMaskShowDialog();
+                    var data = getAllReviews('ASBQCHPN0001124J'); //得到评论数据
+
+                    function getRandomColor() {
+                        var r = Math.floor(Math.random() * 255);
+                        var g = Math.floor(Math.random() * 255);
+                        var b = Math.floor(Math.random() * 255);
+                        return "rgb(" + r + "," + g + "," + b + ")";
+                    }
+                    function getRanddomSize() {
+                        if (Math.random() > 0.5) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    }
+                    function getRandomPosition() {
+                        var ran = Math.random();
+                        if (ran < 0.3) {
+                            return 0;
+                        } else if (ran < 0.6) {
+                            return 1;
+                        } else {
+                            return 1;
+                        }
+                    }
+
+                    var danmuss = {};
+
+                    for (var i = 0; i < data.length; i++) {
+                        var obj = {"text": data[i].content, "color": getRandomColor(), "size": getRanddomSize(), "position": getRandomPosition()};
+                        var key = i * 2 + Math.floor(Math.random() * 10);
+                        danmuss[key] = [obj];
+                    }
+
+
+
+                    $("#danmu").danmu({
+                        left: 0, //区域的起始位置x坐标
+                        top: 0, //区域的起始位置y坐标
+                        height: 630, //区域的高度 
+                        width: 1366, //区域的宽度 
+                        speed: 20000, //弹幕速度，飞过区域的毫秒数 
+                        sumtime: 900, //弹幕运行总时间
+                        danmuss: danmuss, //danmuss对象，运行时的弹幕内容 
+                        default_font_color: "#FFFFFF", //弹幕默认字体颜色 
+                        font_size_small: 16, //小号弹幕的字体大小,注意此属性值只能是整数
+                        font_size_big: 24, //大号弹幕的字体大小 
+                        opacity: "0.9", //弹幕默认透明度 
+                        top_botton_danmu_time: 6000 //顶端底端弹幕持续时间 
+                    });
+
+                    $('#danmu').danmu('danmu_start');
+                });
+            });
+        </script>
+
+    </head>
+    <body>
+        <div id = "mask"></div>
+        <div id = "map"></div>
+        <div class = "control-panel">
+            <div class="control" id="beignDanmu">开始弹幕</div>
+            <div class="control" id="beignAnimation">开始演变</div>
+            <div class="control" id="cancelAnimation">停止演变</div>
+            <div class="control" id="clearPointCollection">清空演变</div>
+            <div class = "control" id = "selectSeaType">
+                <select>
+                    <option value = "all" selected>
+                        评论生长
+                    </option>
+                    <option value = "positive">
+                        正向评论生长
+                    </option>
+                    <option value = "negative">
+                        负向评论生长
+                    </option>
+                </select>
+            </div>
+        </div>
+    </body>
+</html>
+

@@ -1,0 +1,77 @@
+.m-chart{
+    position: fixed;
+    top: 5%;
+    left: 10%;
+    bottom: 5%;
+    right: 10%;
+    /* border: 2px solid blue; */
+    background-color: rgba(255,255,255,0.9);
+    border-radius: 7px;
+
+
+}
+#chart {
+    z-index: 1000;
+    position: absolute;
+    top: 20px;
+    bottom:  20px;
+    left: 20px;
+    right:  20px;
+}
+.m-chart .close-item {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+}
+#mask {
+    position: fixed;
+    top:0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-color: rgba(0,0,0,0.4);
+    z-index: 90000;
+    display: none;
+}
+.chart-inline{
+    display: inline-block;
+    padding: 0px;
+    margin: 0px;
+    box-sizing: border-box;
+    width: 33%;
+    height: 98%;
+    /*                border: 1px solid black;*/
+}
+
+#tagsList {
+    position: relative;                
+    width: 50%;
+    height: 80%;
+    margin: 80px auto 80px;
+    margin-top: 60px;
+}
+#tagsList a {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    font-family: Microsoft YaHei;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 18px 18px;
+}
+#tagsList a:hover {
+    font-size:12px;
+    color: #FF0000;
+    letter-spacing: 3px;
+
+}
+
+#tagsList-title {
+    font-size: 34px;
+    color: #1b77cc;
+    font-family: "微软雅黑";
+    position: absolute;
+    left: 20px;
+    top: 20px;
+}

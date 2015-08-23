@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>热力演变</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=9ff6de693c199a14e77ff93e1907c5fc"></script>
+        <script type="text/javascript" src="http://api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
+        <script type="text/javascript" src="../JS/NAME_TO_LNG_BAIDU.js"></script>
+        <script src="../JS/jquery.js"></script>
+        <style>
+            html,body {
+                width: 100%;
+                height: 100%;                
+                overflow: hidden;
+                font-family: Helvetica, Tahoma, Arial, STXihei, "华文细黑", "Microsoft YaHei", "微软雅黑", sans-serif;font-family: Helvetica, Tahoma, Arial, STXihei, "华文细黑", "Microsoft YaHei", "微软雅黑", sans-serif;
+            }
+            #map {
+                width: 100%;
+                height: 100%;                
+            }
+            .control-panel {
+                position: fixed;
+                right: 0px;
+                top: 80px;
+                width: 100px;
+                height: 120px;
+                cursor: pointer;
+            }
+            .control {
+                box-shadow: 1.5px 2.598px 7px 0px rgba(7,0,2,0.063);
+                width: 100px;
+                height: 60px;
+                background-color: #226fbe;
+                color: white;
+                line-height: 60px;
+                text-align: center;
+                font-size: 13px;
+            }
+            .control:hover{
+                background-color: rgb(82, 141, 201);
+            }
+        </style>
+
+        <script>
+
+            function getReviewsIndexSpecial(id) {
+                var data = null;
+                var postData =
+                        {
+                            id: id,
+                            type: "REVIEWS_GET_SPECIAL"
+                        };
+                postData = JSON.stringify(postData);
+
+                function errorHandle(xhr, message)
+                {
+                    alert(message + "cannot find php");
+                }
+                function successHandle(echoData)
+                {
+                    var obj = JSON.parse(echoData);
+                    if (obj.success)
+                    {
+                        data = obj.data;
+                    }
+                    else
+                    {
+                        alert(obj.message + "fail to get the reviews");
+                    }
+                }
+                var ajaxParameter =
+                        {
+                            url: "../PHP/MainServer.php",
+                            type: "POST",
+                            data: {parameters: postData},
+                            error: errorHandle,
+                            success: successHandle,
+                            async: false//同步
+                        };
+
+                $.ajax(ajaxParameter);
+                return data;
+            }
+
+            function handleHeatData(data) {
+                var points = [];
+                var maxValue = [];
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    var point = NameToLonLatBAIDU[item.name];
+
+                    points.push({
+                        "id": i,
+                        "lng": point.lng,
+                        "lat": point.lat,
+                        "count": 0
+                    });
+                    maxValue.push({
+                        "id": i,
+                        "count": parseInt(item.reviewsCount)
+                    });
+
+
+                }
+                return {
+                    points: points,
+                    maxValue: maxValue
+                };
+            }
+
+
+            function getMax(points) {
+                var max = 0;
+                for (var i = 0; i < points.length; i++) {
+                    if (points[i].count > max) {
+                        max = points[i].count;
+                    }
+                }
+                return max;
+            }
+
+
+
+            var points = null;
+            var maxValue = null;
+            var times = 80;
+            var len = 0;
+
+            function addAll() {
+
+                for (var i = 0; i < points.length; i++) {
+                    points[i].count += Math.floor(maxValue[i].count / times);
+//                    console.log(points[i].count);
+                }
+            }
+
+            function change() {
+
+                addAll();
+                if (len < times) {
+                    len++;
+                    setTimeout(change, 100);
+
+                    heatmapOverlay.setDataSet({data: points, max: max});
+                } else {
+                    alert("演变结束");
+                }
+
+            }
+
+            $(function () {
+                len = 0;
+
+                var map = new BMap.Map("map");
+                var point = new BMap.Point(116.418261, 39.921984);
+                map.centerAndZoom(point, 5);
+                map.enableScrollWheelZoom(true);
+
+                var heatData = getReviewsIndexSpecial('ASBQCHPN0001124J');
+                var obj = handleHeatData(heatData);
+                points = obj.points;
+                maxValue = obj.maxValue;
+//                console.log(maxValue.length);
+                max = getMax(maxValue) - 200;
+
+                heatmapOverlay = new BMapLib.HeatmapOverlay({"radius": 60});
+                map.addOverlay(heatmapOverlay);
+                heatmapOverlay.setDataSet({data: points, max: max});
+                //setTimeout(change, 100);
+
+                $("#beignAnimation").click(function () {
+                    for(var i = 0; i < points.length;i++) {
+                        points[i].count = 0;
+                        len = 0;
+                    }
+                    setTimeout(change, 100);
+                });
+
+            });
+
+
+        </script>
+
+    </head>
+    <body>
+        <div id = "map">
+        </div>
+        <div class = "control-panel">
+            <div class="control" id="beignAnimation">开始演变</div>            
+        </div>
+    </body>
+</html>
